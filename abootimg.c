@@ -682,6 +682,7 @@ void update_images(t_abootimg *img)
   /* put a hash of the contents in the header so boot images can be
    * differentiated based on their first 2k.
    */
+#ifdef __SHA_BOOT_IMAGE__
   SHA_init(&ctx);
   SHA_update(&ctx, img->kernel, img->header.kernel_size);
   SHA_update(&ctx, &img->header.kernel_size, sizeof(img->header.kernel_size));
@@ -696,6 +697,7 @@ void update_images(t_abootimg *img)
   sha = SHA_final(&ctx);
   memcpy(img->header.id, sha,
          SHA_DIGEST_SIZE > sizeof(img->header.id) ? sizeof(img->header.id) : SHA_DIGEST_SIZE);
+#endif
 
   n = (img->header.kernel_size + page_size - 1) / page_size;
   m = (img->header.ramdisk_size + page_size - 1) / page_size;
@@ -803,7 +805,7 @@ void write_bootimg(t_abootimg* img)
       abort_perror(img->fname);
   }
 
-  if (img->header.dt_size) {
+  if (img->header.dt_size && img->dt) {
     if (fseek(img->stream, (1+n+m+o)*psize, SEEK_SET))
       abort_perror(img->fname);
 
